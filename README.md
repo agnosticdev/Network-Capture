@@ -1,4 +1,4 @@
-# Network-Capture
+# Network Capture
 Python wrapper around tcpdump for fine grain search criteria that is written the final log file.
 
 For example, when filtering on eith the port, ip, or the interface you can specify the keywords you are looking for in your traffic dump to be captured and written to the final output file.
