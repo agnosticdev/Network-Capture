@@ -5,6 +5,13 @@
 # Note: At the time of writing this script, it is intended for unix systems.
 # Windows currently is not supported.
 #
+#
+# Note if you are running this module in Linux you may need to alter app armor.
+# Specifically in Ubuntu aa-complain needed to be setup instead of aa-enforce
+# $ sudo aa-complain /usr/sbin/tcpdump
+# $ sudo aa-enforce /usr/sbin/tcpdump
+#
+#
 
 import os, sys, datetime, platform, ipaddress, fcntl, struct, subprocess
 from socket import *
@@ -50,7 +57,7 @@ class network_capture(object):
 			if not self.validate_interface(self.interface):
 				exit("The interface being used is not up.")
 
-			self.capture_cmd = "sudo tcpdump -i " + self.port + " -w " \
+			self.capture_cmd = "sudo tcpdump -i " + self.interface + " -w " \
 									+ self.filename
 
 		if "-k" == args[0][3] and args[0][4] is not None:
@@ -116,41 +123,45 @@ class network_capture(object):
 
 	def capture(self):
 
+		captue = None
+		capture_file_object = None
 		try:
-			print(self.capture_cmd)
+			os.system("touch " + self.filename)
+			os.system("chmod 777 " + self.filename)
+
 			# Open a new file for filter capture
-			capture_file = open(self.filename, "w")
+			capture_file_object = open(self.filename, "w")
 
 			# Start the capture
-			capture = subprocess.Popen(self.capture_cmd, 
-									   shell=True, 
-									   stdout=subprocess.PIPE).stdout
+			capture = subprocess.Popen([self.capture_cmd], 
+									   shell=True,
+									   stdout=subprocess.PIPE)
 
 			print("-- Start Capturing Network Traffic --")
 
 			while True:
-				captured_line = capture.readline()
+				captured_line = capture.stdout.readline()
 				if captured_line is not b'':
 					print(captured_line)
 
 					# Check for the keywords in the list 
 					if any(self.keywords in captured_line for key in self.keywords):
 						print("Found keyword, writing to network capture log.")
-						capture_file.write(captured_line)
+						capture_file_object.write(captured_line)
 
 		except OSError as err:
 		    print("OS error: {0}".format(err))
-		    capture_file.close()
-		    capture.terminate()
+		    capture_file_object.close()
+		    capture.kill()
 		    exit("Exiting due to an operating system failure...")
 		except KeyboardInterrupt:
-			capture_file.close()
-			capture.terminate()
+			capture_file_object.close()
+			capture.kill()
 			exit("Exiting by directed keyboard interrupt...")
 		except:
 		    print("Unexpected error:", sys.exc_info()[0])
-		    capture_file.close()
-		    capture.terminate()
+		    capture_file_object.close()
+		    capture.kill()
 		    exit("Exiting due to an unexpected failure...")
 
 
