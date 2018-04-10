@@ -121,26 +121,26 @@ class network_capture(object):
 	def capture(self):
 
 		print("Capturing command: " +self.capture_cmd)
-		captue = None
-		capture_file_object = None
+		captue_process = None
+		capture_file_object = open(self.filename, "w")
+		capture_stdout = None
 		try:
 			os.system("touch " + self.filename)
 			os.system("chmod 777 " + self.filename)
 
-			# Open a new file for filter capture
-			capture_file_object = open(self.filename, "w")
-
 			# Start the capture
-			capture = subprocess.Popen([self.capture_cmd], 
+			captue_process = subprocess.Popen([self.capture_cmd], 
 									   shell=True,
 									   stdout=subprocess.PIPE)
 
+			captue_process.__enter__()
+			capture_stdout = captue_process.stdout
 			print("-- Start Capturing Network Traffic --")
 
 			while True:
-				captured_line = capture.stdout.readline()
+				captured_line = capture_stdout.readline()
 				print(captured_line)
-				if captured_line is not b'':
+				if captured_line != b"" and not captured_line:
 					print(captured_line)
 
 					# Check for the keywords in the list 
@@ -151,17 +151,23 @@ class network_capture(object):
 		except OSError as err:
 		    print("OS error: {0}".format(err))
 		    capture_file_object.close()
-		    capture.kill()
-		    exit("Exiting due to an operating system failure...")
+		    captue_process.kill()
+		    captue_process.wait()
+		    print("Exiting due to an operating system failure...")
+		    sys.exit(0)
 		except KeyboardInterrupt:
 			capture_file_object.close()
-			capture.kill()
-			exit("Exiting by directed keyboard interrupt...")
+			captue_process.kill()
+			captue_process.wait()
+			print("Exiting by directed keyboard interrupt...")
+			sys.exit(0)
 		except:
-		    print("Unexpected error:", sys.exc_info()[0])
-		    capture_file_object.close()
-		    capture.kill()
-		    exit("Exiting due to an unexpected failure...")
+			print("Unexpected error:", sys.exc_info()[0])
+			capture_file_object.close()
+			captue_process.kill()
+			captue_process.wait()
+			print("Unexpected excpetion received...")
+			sys.exit(0)
 
 
 
