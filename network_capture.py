@@ -43,27 +43,23 @@ class network_capture(object):
 			if not self.validate_ip(self.ip):
 				exit("The ip being used is not valid.")
 
-			self.capture_cmd = "sudo tcpdump host " + self.ip + " -w " \
-									+ self.filename
+			self.capture_cmd = "sudo tcpdump host " + self.ip + " -vv"
 		elif "-port" == args[0][1] and args[0][2] is not None:
 			self.port = args[0][2]
 			if not self.validate_port(self.port):
 				exit("The port being used is not valid.")
 
-			self.capture_cmd = "sudo tcpdump port " + self.port + " -w " \
-									+ self.filename
+			self.capture_cmd = "sudo tcpdump port " + self.port + " -vv"
 		elif "-interface" == args[0][1] and args[0][2] is not None:
 			self.interface = args[0][2]
 			if not self.validate_interface(self.interface):
 				exit("The interface being used is not up.")
 
-			self.capture_cmd = "sudo tcpdump -i " + self.interface + " -w " \
-									+ self.filename
+			self.capture_cmd = "sudo tcpdump -i " + self.interface + " -vv"
 
 		if "-k" == args[0][3] and args[0][4] is not None:
 			self.keywords = args[0][4].split(",")
 
-		print(self.capture_cmd)
 		# Perform the capture after all validation is complete
 		if self.capture_cmd is not None:
 			self.capture()
@@ -111,6 +107,7 @@ class network_capture(object):
 		unix_socket = socket(AF_INET, SOCK_DGRAM)
 		fd = fcntl.ioctl(unix_socket.fileno(), SIOCGIFFLAGS, interface + null256)
 		flags, = struct.unpack('H', fd[16:18])
+		unix_socket.close()
 		if flags & 1:
 			return True
 		else:
@@ -123,6 +120,7 @@ class network_capture(object):
 
 	def capture(self):
 
+		print("Capturing command: " +self.capture_cmd)
 		captue = None
 		capture_file_object = None
 		try:
@@ -141,6 +139,7 @@ class network_capture(object):
 
 			while True:
 				captured_line = capture.stdout.readline()
+				print(captured_line)
 				if captured_line is not b'':
 					print(captured_line)
 
