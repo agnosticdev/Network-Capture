@@ -125,7 +125,8 @@ class network_capture(object):
 		capture_file_object = open(self.filename, "w")
 		capture_stdout = None
 		try:
-			os.system("touch " + self.filename)
+			# Just to make sure you do not need to enter your password.
+			# Set the mode for the file to full read/write
 			os.system("chmod 777 " + self.filename)
 
 			# Start the capture
@@ -139,34 +140,33 @@ class network_capture(object):
 
 			while True:
 				captured_line = capture_stdout.readline()
-				print(captured_line)
-				if captured_line != b"" and not captured_line:
-					print(captured_line)
-
+				print(captured_line.decode("utf-8"))
+				if captured_line != b"":
+					captured_line = captured_line.decode("utf-8")
 					# Check for the keywords in the list 
-					if any(self.keywords in captured_line for key in self.keywords):
+					if any(key in captured_line for key in self.keywords):
 						print("Found keyword, writing to network capture log.")
 						capture_file_object.write(captured_line)
 
 		except OSError as err:
-		    print("OS error: {0}".format(err))
-		    capture_file_object.close()
-		    captue_process.kill()
-		    captue_process.wait()
-		    print("Exiting due to an operating system failure...")
-		    sys.exit(0)
-		except KeyboardInterrupt:
-			capture_file_object.close()
+			print("-- Exiting due to an operating system failure --")
+			print("OS error: {0}".format(err))
 			captue_process.kill()
 			captue_process.wait()
-			print("Exiting by directed keyboard interrupt...")
+			capture_file_object.close()
+			sys.exit(0)
+		except KeyboardInterrupt:
+			print("-- Exiting due to keyboard interrupt --")
+			captue_process.kill()
+			captue_process.wait()
+			capture_file_object.close()
 			sys.exit(0)
 		except:
+			print("-- Unexpected excpetion received --")
 			print("Unexpected error:", sys.exc_info()[0])
-			capture_file_object.close()
 			captue_process.kill()
 			captue_process.wait()
-			print("Unexpected excpetion received...")
+			capture_file_object.close()
 			sys.exit(0)
 
 
