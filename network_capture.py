@@ -130,43 +130,47 @@ class network_capture(object):
 			os.system("chmod 777 " + self.filename)
 
 			# Start the capture
-			captue_process = subprocess.Popen([self.capture_cmd], 
-									   shell=True,
-									   stdout=subprocess.PIPE)
+			captue_process = subprocess.Popen([self.capture_cmd], shell=True)
 
-			captue_process.__enter__()
-			capture_stdout = captue_process.stdout
 			print("-- Start Capturing Network Traffic --")
 
 			while True:
-				captured_line = capture_stdout.readline()
-				print(captured_line.decode("utf-8"))
+				captured_line, errs = captue_process.communicate(timeout=15)
 				if captured_line != b"":
 					captured_line = captured_line.decode("utf-8")
+					print(captured_line)
 					# Check for the keywords in the list 
 					if any(key in captured_line for key in self.keywords):
-						print("Found keyword, writing to network capture log.")
+						print("** Keywor found. Writing to log **")
 						capture_file_object.write(captured_line)
 
 		except OSError as err:
-			print("-- Exiting due to an operating system failure --")
-			print("OS error: {0}".format(err))
-			captue_process.kill()
-			captue_process.wait()
 			capture_file_object.close()
+			captue_process.kill()
+			stdout, errs = captue_process.communicate()
+			print("-- Exiting due to an operating system failure --")
+			print("Error: {0}".format(err))
 			sys.exit(0)
 		except KeyboardInterrupt:
-			print("-- Exiting due to keyboard interrupt --")
-			captue_process.kill()
-			captue_process.wait()
 			capture_file_object.close()
+			captue_process.kill()
+			stdout, errs = captue_process.communicate()
+			print("-- Exiting due to keyboard interrupt --")
+			print("Errors: {0}".format(errs))
+			sys.exit(0)
+		except TimeoutExpired:
+			capture_file_object.close()
+			captue_process.kill()
+			stdout, errs = captue_process.communicate()
+			print("-- Exiting due to process timeout --")
+			print("Errors: {0}".format(errs))
 			sys.exit(0)
 		except:
-			print("-- Unexpected excpetion received --")
-			print("Unexpected error:", sys.exc_info()[0])
-			captue_process.kill()
-			captue_process.wait()
 			capture_file_object.close()
+			captue_process.kill()
+			stdout, errs = captue_process.communicate()
+			print("-- Unexpected excpetion received --")
+			print("Errors: {0}".format(sys.exc_info()[0]))
 			sys.exit(0)
 
 
