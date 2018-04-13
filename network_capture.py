@@ -130,38 +130,39 @@ class network_capture(object):
 			os.system("chmod 777 " + self.filename)
 
 			# Start the capture
-			captue_process = subprocess.Popen([self.capture_cmd], shell=True)
+			captue_process = subprocess.Popen([self.capture_cmd], 
+											  shell=True,
+											  stdout=subprocess.PIPE)
 
 			print("-- Start Capturing Network Traffic --")
 
 			while True:
-				captured_line, errs = captue_process.communicate()
-				if captured_line is not None:
+				captured_line = captue_process.stdout.readline()
+				if captured_line is not None and captured_line != b'':
 					captured_line = captured_line.decode("utf-8")
-					print(captured_line)
+					print("{0} \n".format(captured_line))
 					# Check for the keywords in the list 
 					if any(key in captured_line for key in self.keywords):
 						print("** Keyword found. Writing to log **")
-						capture_file_object.write(captured_line)
+						capture_file_object.write(captured_line + "\n")
 
 		except OSError as err:
 			capture_file_object.close()
 			captue_process.kill()
-			stdout, errs = captue_process.communicate()
+			captue_process.wait()
 			print("-- Exiting due to an operating system failure --")
 			print("Error: {0}".format(err))
 			sys.exit(0)
 		except KeyboardInterrupt:
 			capture_file_object.close()
 			captue_process.kill()
-			stdout, errs = captue_process.communicate()
+			captue_process.wait()
 			print("-- Exiting due to keyboard interrupt --")
-			print("Errors: {0}".format(errs))
 			sys.exit(0)
 		except:
 			capture_file_object.close()
 			captue_process.kill()
-			stdout, errs = captue_process.communicate()
+			captue_process.wait()
 			print("-- Unexpected excpetion received --")
 			print("Errors: {0}".format(sys.exc_info()[0]))
 			sys.exit(0)
