@@ -120,10 +120,18 @@ class network_capture(object):
 
 	def capture(self):
 
-		print("Capturing command: " +self.capture_cmd)
+		print("Capturing command: {0}".format(self.capture_cmd))
+		line_count = 0
 		captue_process = None
-		capture_file_object = open(self.filename, "w")
 		capture_stdout = None
+
+		try:
+			capture_file_object = open(self.filename, "w")
+		except IOError as err:
+			print("-- Exiting due to an IOError --")
+			print("Error: {0}".format(err))
+			sys.exit(0)
+		
 		try:
 			# Just to make sure you do not need to enter your password.
 			# Set the mode for the file to full read/write
@@ -145,12 +153,14 @@ class network_capture(object):
 					if any(key in captured_line for key in self.keywords):
 						print("** Keyword found. Writing to log **")
 						capture_file_object.write(captured_line + "\n")
+						line_count += 1
 
 		except OSError as err:
 			capture_file_object.close()
 			captue_process.kill()
 			captue_process.wait()
 			print("-- Exiting due to an operating system failure --")
+			print("-- {0} lines captured in your filter --".format(line_count))
 			print("Error: {0}".format(err))
 			sys.exit(0)
 		except KeyboardInterrupt:
@@ -158,12 +168,14 @@ class network_capture(object):
 			captue_process.kill()
 			captue_process.wait()
 			print("-- Exiting due to keyboard interrupt --")
+			print("-- {0} lines captured in your filter --".format(line_count))
 			sys.exit(0)
 		except:
 			capture_file_object.close()
 			captue_process.kill()
 			captue_process.wait()
 			print("-- Unexpected excpetion received --")
+			print("-- {0} lines captured in your filter --".format(line_count))
 			print("Errors: {0}".format(sys.exc_info()[0]))
 			sys.exit(0)
 
