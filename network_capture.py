@@ -125,59 +125,55 @@ class network_capture(object):
 		captue_process = None
 		capture_stdout = None
 
-		try:
-			capture_file_object = open(self.filename, "w")
-		except IOError as err:
-			print("-- Exiting due to an IOError --")
-			print("Error: {0}".format(err))
-			sys.exit(0)
-		
-		try:
-			# Just to make sure you do not need to enter your password.
-			# Set the mode for the file to full read/write
-			os.system("chmod 777 " + self.filename)
+		# Open a file and start the capture with the files context for read/write
+		with open(self.filename, "w") as capture_file_object:
 
-			# Start the capture
-			captue_process = subprocess.Popen([self.capture_cmd], 
-											  shell=True,
-											  stdout=subprocess.PIPE)
+			try:
+				# Just to make sure you do not need to enter your password.
+				# Set the mode for the file to full read/write
+				os.system("chmod 777 " + self.filename)
 
-			print("-- Start Capturing Network Traffic --")
+				# Start the capture
+				captue_process = subprocess.Popen([self.capture_cmd], 
+												  shell=True,
+												  stdout=subprocess.PIPE)
 
-			while True:
-				captured_line = captue_process.stdout.readline()
-				if captured_line is not None and captured_line != b'':
-					captured_line = captured_line.decode("utf-8")
-					print("{0} \n".format(captured_line))
-					# Check for the keywords in the list 
-					if any(key in captured_line for key in self.keywords):
-						print("** Keyword found. Writing to log **")
-						capture_file_object.write(captured_line + "\n")
-						line_count += 1
+				print("-- Start Capturing Network Traffic --")
 
-		except OSError as err:
-			capture_file_object.close()
-			captue_process.kill()
-			captue_process.wait()
-			print("-- Exiting due to an operating system failure --")
-			print("-- {0} lines captured in your filter --".format(line_count))
-			print("Error: {0}".format(err))
-			sys.exit(0)
-		except KeyboardInterrupt:
-			capture_file_object.close()
-			captue_process.kill()
-			captue_process.wait()
-			print("-- Exiting due to keyboard interrupt --")
-			print("-- {0} lines captured in your filter --".format(line_count))
-			sys.exit(0)
-		except:
-			capture_file_object.close()
-			captue_process.kill()
-			captue_process.wait()
-			print("-- Unexpected excpetion received --")
-			print("-- {0} lines captured in your filter --".format(line_count))
-			print("Errors: {0}".format(sys.exc_info()[0]))
-			sys.exit(0)
+				while True:
+					captured_line = captue_process.stdout.readline()
+					if captured_line is not None and captured_line != b'':
+						captured_line = captured_line.decode("utf-8")
+						print("{0} \n".format(captured_line))
+						# Check for the keywords in the list 
+						if any(key in captured_line for key in self.keywords):
+							print("** Keyword found. Writing to log **")
+							capture_file_object.write(captured_line + "\n")
+							line_count += 1
+
+			except OSError as err:
+				capture_file_object.close()
+				captue_process.kill()
+				captue_process.wait()
+				print("-- Exiting due to an operating system failure --")
+				print("-- {0} lines captured in your filter --".format(line_count))
+				print("Error: {0}".format(err))
+				sys.exit(0)
+			except KeyboardInterrupt:
+				capture_file_object.close()
+				captue_process.kill()
+				captue_process.wait()
+				print("-- Exiting due to keyboard interrupt --")
+				print("-- {0} lines captured in your filter --".format(line_count))
+				sys.exit(0)
+			except:
+				capture_file_object.close()
+				captue_process.kill()
+				captue_process.wait()
+				print("-- Unexpected excpetion received --")
+				print("-- {0} lines captured in your filter --".format(line_count))
+				print("Errors: {0}".format(sys.exc_info()[0]))
+				sys.exit(0)
 
 
 
