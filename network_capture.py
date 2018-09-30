@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 #
 # Network_Capture Module has been built as a standalone module 
+# Network Capture was built around TCPDump to provide more advanced packet
+# filtering.  Currently there is complexity around the usage of filters and
+# arguments while using TCPDump.  This module aims to improve that. 
+#
 #
 # Note: At the time of writing this script, it is intended for unix systems.
 # Windows currently is not supported.
@@ -152,29 +156,23 @@ class network_capture(object):
 							line_count += 1
 
 			except OSError as err:
-				capture_file_object.close()
-				captue_process.kill()
-				captue_process.wait()
 				print("-- Exiting due to an operating system failure --")
 				print("-- {0} lines captured in your filter --".format(line_count))
 				print("Error: {0}".format(err))
 				sys.exit(0)
 			except KeyboardInterrupt:
-				capture_file_object.close()
-				captue_process.kill()
-				captue_process.wait()
 				print("-- Exiting due to keyboard interrupt --")
 				print("-- {0} lines captured in your filter --".format(line_count))
 				sys.exit(0)
 			except:
-				capture_file_object.close()
-				captue_process.kill()
-				captue_process.wait()
 				print("-- Unexpected excpetion received --")
 				print("-- {0} lines captured in your filter --".format(line_count))
 				print("Errors: {0}".format(sys.exc_info()[0]))
 				sys.exit(0)
-
+			finally:
+				capture_file_object.close()
+				captue_process.kill()
+				captue_process.wait()
 
 
 
