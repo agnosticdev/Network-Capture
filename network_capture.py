@@ -20,9 +20,23 @@
 import os, sys, datetime, platform, ipaddress, fcntl, struct, subprocess
 from socket import *
 
-# cpython/cpython network_capture.py -ip 199.99.99.99 -k error,host,ssl
-# cpython/cpython network_capture.py -port 80 -k error,host,ssl
-# cpython/cpython network_capture.py -interface enp4s0 -k error,host,ssl
+# Host (199.99.99.99) capture for keys: error,host,ssl
+# $ python network_capture.py host 199.99.99.99 -keys error,host,ssl
+
+# Port (80) capture  for keys: error,host,ssl
+# $ python network_capture.py port 80 -keys error,host,ssl
+
+# Port (80) capture  for keys: error,host,ssl
+# $ python network_capture.py -i en0 -keys error,host,ssl
+
+#
+# TODO:
+#  1) Change all input commands over to tcpdump commands.
+#  2) Check for the -keys argument instead of -k 
+#  3) Save a full pcap, a filtered pcap, and a txt file.
+#
+#
+#
 
 
 class network_capture(object):
@@ -47,19 +61,19 @@ class network_capture(object):
 			if not self.validate_ip(self.ip):
 				exit("The ip being used is not valid.")
 
-			self.capture_cmd = "sudo tcpdump host " + self.ip + " -vv"
+			self.capture_cmd = "sudo tcpdump host " + self.ip + " -vvv"
 		elif "-port" == args[0][1] and args[0][2] is not None:
 			self.port = args[0][2]
 			if not self.validate_port(self.port):
 				exit("The port being used is not valid.")
 
-			self.capture_cmd = "sudo tcpdump port " + self.port + " -vv"
+			self.capture_cmd = "sudo tcpdump port " + self.port + " -vvv"
 		elif "-interface" == args[0][1] and args[0][2] is not None:
 			self.interface = args[0][2]
 			if not self.validate_interface(self.interface):
 				exit("The interface being used is not up.")
 
-			self.capture_cmd = "sudo tcpdump -i " + self.interface + " -vv"
+			self.capture_cmd = "sudo tcpdump -i " + self.interface + " -vvv"
 
 		if "-k" == args[0][3] and args[0][4] is not None:
 			self.keywords = args[0][4].split(",")
