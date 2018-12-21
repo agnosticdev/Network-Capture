@@ -1,9 +1,12 @@
 # Network Capture
-Python wrapper around tcpdump for fine grain search criteria that is written the final pcap.
+Python wrapper around tcpdump for fine grain search criteria that is written to a txt file as well as capturing a pcap.
 
-Network Capture was built as a Python wrapper around TCPdump to provide more advanced packet filtering in the output of your pcap or txt files.  Currently there is complexity on filtering the right information while using TCPdump, and this module attempts to normalize these problems by giving the user an open set of keywords and criteria to generate file based upon. 
 
-For example, when filtering on either the port, ip, or the interface you can specify the keywords that you are looking for in your traffic dump to be captured and written to the final output file. The final output will be a pcap and a txt file for review.
+Network Capture was built as a Python wrapper around TCPdump to provide more advanced  filtering for specific keywords in stdout as well as capturing a pcap file.
+
+Currently there is complexity on filtering the right information while using TCPdump, and this module attempts to normalize these problems by giving the user quick filtering resource by filtering stdout to a text file.
+
+For example, when filtering on either the port, ip, or the interface you can specify the keywords that you are looking for in your traffic dump to be captured and written to a final text file. The final text will contain the filtered search when either error, host, or ssl is found.  If no keywords are passed in then everything from stdout is captured to a txt file.
 
 ```bash
 # Host (199.99.99.99) capture for keys: error,host,ssl

@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 #
-# Network_Capture Module has been built as a standalone module 
-# Network Capture was built around TCPdump to provide more advanced packet
-# filtering.  Currently there is complexity around the usage of filters and
-# arguments while using TCPdump.  This module aims to improve that. 
+# Network Capture was built as a standalone module. 
+# Network Capture was built as a wrapper around TCPdump to provide a way to
+# run a packet capture and print to stdout at the same time.
 #
+# One of the key features of Network Capture is to filter stdout and write
+# it to a file by passing in the -keys argument.  This provides filtered insight
+# on high volume traffic.
+# 
 #
 # Note: At the time of writing this script, it is intended for unix systems.
 # Windows currently is not supported.
@@ -27,26 +30,28 @@ from socket import *
 # Port (80) capture  for keys: error,host,ssl
 # $ python network_capture.py port 80 -keys error,host,ssl
 
-# Port (80) capture  for keys: error,host,ssl
+# Interface (enp4s0) capture  for keys: error,host,ssl
 # $ python network_capture.py -i enp4s0 ip6 -keys error,host,ssl
 
 #
 # TODO:
-#  1) Generate valid TCPdump pcap (Binary stream is not valid right now)
-#  2) Add tests
-#  
+#  1) Add error handling support.
+#  2) Add tests.
+#  3) Add enhanced filtering for the pcap from the keys
 #
 
 
 class network_capture(object):
 
 	__slots__ = ('keywords', 
-				 'capture_cmd', 
+				 'capture_cmd',
+				 'pcap_file', 
 				 'txt_file',
-				 'pcap_file',
 				 'validation_values',
 				 'validation_map')
 
+	#
+	# Constructor
 	def __init__(self, *args):
 
 		self.keywords = []
@@ -57,8 +62,8 @@ class network_capture(object):
 			'-i': ''
 		}
 		self.validation_map = {
-			'host': 'validate_host',
-			'port': 'validate_port',
+			'-host': 'validate_host',
+			'-port': 'validate_port',
 			'-i': 'validate_interface'
 		}
 
@@ -84,23 +89,28 @@ class network_capture(object):
 
 		# Iterate through the arguments to get the commands
 		for index, val in enumerate(args[0]):
-			if index > 0 and args[0][(index - 1)] == "-keys":
-				if "," not in val:
-					self.keywords.append(val)
-				else:
-					self.keywords = val.split(",")
-			elif index > 0 and val != '-keys':
-				self.capture_cmd += " {0}".format(val)
-				if val in self.validation_values:
-					self.validation_values[val] = args[0][(index + 1)]
+		 	if index > 0 and args[0][(index - 1)] == "-keys":
+		 		if "," not in val:
+		 			self.keywords.append(val)
+		 		else:
+		 			self.keywords = val.split(",")
+		 	elif index > 0 and val != '-keys':
+		 		self.capture_cmd += " {0}".format(val)
+		 		if val in self.validation_values:
+		 			self.validation_values[val] = args[0][(index + 1)]
 
 
-		# Set the verbose flags for TCPdump 
-		self.capture_cmd += " -vvv -XX"
 
-		# Validation check to make sure we have extracted -keys at this point
-		if len(self.keywords) == 0:
-			exit("Please make sure you provide keyword, exiting.")
+		# Set the verbose flags for tcpdump 
+		self.capture_cmd += " -vvv -w - | tee {0} ".format(self.pcap_file)
+
+		# Attempts to add in the keys to the first tcpdump to filter pcap
+		# Currently does not work, but is under evaluation.
+		#keys = '|'.join(self.keywords)
+		#self.capture_cmd += "| grep '{0}'".format(keys)
+
+		# Add the second tcpdump to print the values to stdout
+		self.capture_cmd += "| tcpdump -lnr -"
 
 
 		# Iterate through the collected validation routines
@@ -110,7 +120,7 @@ class network_capture(object):
 				validate_method = getattr(self, self.validation_map[key])
 				validate_method(val)
 
-
+	#
 	# Platform validation
 	def validate_platform(self):
 		# This is only for unix system
@@ -122,6 +132,7 @@ class network_capture(object):
 
 		return True
 
+	#
 	# Host validation
 	def validate_host(self, host):
 		try:
@@ -131,6 +142,7 @@ class network_capture(object):
 			print(message)
 			exit("The host being used is not valid, exiting.")
 
+	#
 	# Port validation
 	def validate_port(self, port):
 		try:
@@ -143,6 +155,7 @@ class network_capture(object):
 			print("Port out of range 0-65535")
 			exit("The port being used is not valid, exiting.")
 	
+	#
 	# Interface validation
 	def validate_interface(self, interface):
 		print("validate_interface!!!!")
@@ -158,10 +171,13 @@ class network_capture(object):
 		else:
 			exit("The interface being used is not up.")
 
+	#
 	# Get a filename to set for both the pcap and txt filtered file
 	def get_filename(self):
 		return f"network_capture_{datetime.datetime.now():%Y-%m-%d-%m:%s}"
 
+	#
+	#
 	def capture_error(self):
 		print("capture_error")
 
@@ -172,16 +188,19 @@ class network_capture(object):
 		line_count = 0
 		capture_pid = None
 		capture_stdout = None
+		keyword_filtering = False
+
+
+		if len(self.keywords) > 0:
+			keyword_filtering = True
 
 		# Open a file and start the capture with the files context for read/write
-		with open(self.txt_file, 'w') as txt_file_obj, \
-			open(self.pcap_file, 'wb') as pcap_file_obj:
+		with open(self.txt_file, 'w') as txt_file_obj:
 
 			try:
 				# Just to make sure you do not need to enter your password.
 				# Set the mode for the file to full read/write
 				os.system("chmod 777 " + self.txt_file)
-				os.system("chmod 777 " + self.pcap_file)
 
 				print("-- Start Capturing Network Traffic --")
 
@@ -193,11 +212,15 @@ class network_capture(object):
 
 						captured_line = captured_line.decode("utf-8")
 						print("{0} \n".format(captured_line))
-						if any(key in captured_line for key in self.keywords):
-							print("** Keyword found. Writing to log **")
+
+						if keyword_filtering:
+							if any(key in captured_line for key in self.keywords):
+								print("** Keyword found. Writing to log **")
+								txt_file_obj.write(captured_line + "\n")
+								# Removing this until this works
+								line_count += 1
+						else:
 							txt_file_obj.write(captured_line + "\n")
-							# Removing this until this works
-							#pickle.dump(captured_line, pcap_file_obj)
 							line_count += 1
 
 			except OSError as err:
@@ -216,7 +239,6 @@ class network_capture(object):
 				sys.exit(0)
 			finally:
 				txt_file_obj.close()
-				pcap_file_obj.close()
 				await self.kill_process(capture_pid)
 
 
@@ -227,6 +249,7 @@ class network_capture(object):
 
 	async def capture_read_bytes(self, capture_pid):
 		return await capture_pid.stdout.readline()
+
 
 	async def kill_process(self, capture_pid):
 		capture_pid.kill()
