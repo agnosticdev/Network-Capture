@@ -24,3 +24,11 @@ $ python network_capture.py -i en0 -keys error,host,ssl
 This module does not attempt to rebuild the functionality currently found in TCPdump, but rather to utilize it to make filtering stronger.
 
 There are some built in validation routines available in this module that can validate common arguments like port number, host, and interface, but these are just extra utilities that attempt to add extra benefit on top of TCPdump. 
+
+
+## Functionality Road Map
+
+1) Add error handling support.
+2) Add unit tests.
+3) Add enhanced filtering for the pcap from the keys
+4) Add formatting support in the module itself.

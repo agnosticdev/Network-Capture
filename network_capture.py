@@ -30,14 +30,15 @@ from socket import *
 # Port (80) capture  for keys: error,host,ssl
 # $ python network_capture.py port 80 -keys error,host,ssl
 
-# Interface (enp4s0) capture  for keys: error,host,ssl
-# $ python network_capture.py -i enp4s0 ip6 -keys error,host,ssl
+# Interface (en0) capture  for keys: error,host,ssl
+# $ python network_capture.py -i en0 ip6 -keys error,host,ssl
 
 #
 # TODO:
 #  1) Add error handling support.
 #  2) Add tests.
 #  3) Add enhanced filtering for the pcap from the keys
+#  4) Add formatting support.
 #
 
 
@@ -158,7 +159,6 @@ class network_capture(object):
 	#
 	# Interface validation
 	def validate_interface(self, interface):
-		print("validate_interface!!!!")
 		SIOCGIFFLAGS = 0x8913
 		null256 = '\0'*256
 
