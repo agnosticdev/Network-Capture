@@ -3,6 +3,10 @@
 # Network_Capture Module has been built as a standalone module 
 # This file is to test the functionality of Network_Capture.
 #
+# Executet the test file:
+# python -m unittest
+#
+#
 
 import os, sys, unittest
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -10,7 +14,6 @@ from network_capture import network_capture
 
 
 class test_network_capture(unittest.TestCase):
-
 
 	def setUp(self):
 		# Setup test data and variables
