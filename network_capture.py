@@ -73,7 +73,6 @@ class network_capture(object):
 		self.txt_file = filename + '.txt'
 		self.pcap_file = filename + '.pcap'
 
-
 		# Set args as an array of arrays
 		args = list(args)
 
