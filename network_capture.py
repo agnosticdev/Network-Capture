@@ -125,7 +125,7 @@ class network_capture(object):
 	def validate_platform(self):
 		# This is only for unix system
 		if platform.system() is "Windows":
-			print("network_traffic is not supportd by Windows.")
+			print("network_capture is not supportd by Windows.")
 			return False
 
 		# TODO: validate TCPdump is on the machine

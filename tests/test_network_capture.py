@@ -34,10 +34,10 @@ class test_network_capture(unittest.TestCase):
 			nc = network_capture([])
 			self.fail("Program did not exit.  Failure.")
 		except SystemExit:
-			self.print_message("Success: No args. Caught SystemExit")
+			self.print_message("Success: No args. Caught SystemExit.")
 			self.assertTrue(True)
 		except:
-			self.print_message("Success: No args. Expected error caught")
+			self.print_message("Success: No args. Expected error caught.")
 			self.assertTrue(True)
 
 	# Test that passing in arguments validates.
@@ -65,7 +65,42 @@ class test_network_capture(unittest.TestCase):
 			self.assertTrue(True)
 		except:
 			self.print_message("Success: Exception on alpha port value.")
-			self.assertTrue(True)	
+			self.assertTrue(True)
+
+	# Ensure IPv4 addresses can be validated against a host argument.
+	def test_inet_validation(self):
+		try:
+			args = ['python', 'network_capture.py', 
+					'-host', '127.0.0.1', '-keys', 'error,host,ssl']
+			nc = network_capture(args)
+			self.print_message("Success: Passing inet for host address.")
+			self.assertTrue(True)
+		except ValueError:
+			self.fail("Failure. Caught SystemExit")
+		except:
+			self.fail("Failure. Caught Exception")
+
+	# Ensure IPv6 addresses can be validated against a host argument.
+	def test_inet6_validation(self):
+		try:
+			args = ['python', 'network_capture.py', 
+					'-host', '::1', '-keys', 'error,host,ssl']
+			nc = network_capture(args)
+			self.print_message("Success: Passing inet6 for host address.")
+			self.assertTrue(True)
+		except ValueError:
+			self.fail("Failure. Caught SystemExit")
+		except:
+			self.fail("Failure. Caught Exception")
+
+	#def test_host_interface(self):
+	#	# TODO: Implement
+
+	#def test_tcpdump_present(self):
+	#	# TODO: Implement
+
+	#def test_platform(self):
+	#	# TODO: Implement
 
 
 if __name__ == "__main__":
