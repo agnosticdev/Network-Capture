@@ -29,6 +29,5 @@ There are some built in validation routines available in this module that can va
 ## Functionality Road Map
 
 1) Add error handling support.
-2) Add unit tests.
-3) Add enhanced filtering for the pcap from the keys
-4) Add formatting support in the module itself.
+2) Add enhanced filtering for the pcap from the keys
+3) Add formatting support in the module itself.

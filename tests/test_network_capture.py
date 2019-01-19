@@ -8,7 +8,7 @@
 #
 #
 
-import os, sys, unittest
+import os, sys, unittest, subprocess
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from network_capture import network_capture
 
@@ -89,19 +89,37 @@ class test_network_capture(unittest.TestCase):
 			self.print_message("Success: Passing inet6 for host address.")
 			self.assertTrue(True)
 		except ValueError:
-			self.fail("Failure. Caught SystemExit")
+			self.fail("Failure. Caught ValueError")
 		except:
 			self.fail("Failure. Caught Exception")
 
-	#def test_host_interface(self):
-	#	# TODO: Implement
+	# Ensure that an interface is valid on the machine before the test is run.
+	def test_interface_validation(self):
+		try:
+			interface = 'lo' # Add your interface here
+			args = ['python', 'network_capture.py', 
+					'-i', interface, '-keys', 'error,host,ssl']
+			nc = network_capture(args)
+			self.print_message("Success: Passing {0} for interface."
+				.format(interface))
+			self.assertTrue(True)
+		except ValueError:
+			self.fail("Failure. Caught ValueError")
+		except OSError:
+			self.fail("Failure. Caught OSError")
+		except:
+			self.fail("Failure. Caught Exception")
 
-	#def test_tcpdump_present(self):
-	#	# TODO: Implement
-
-	#def test_platform(self):
-	#	# TODO: Implement
-
+	# Make sure tcpdump is present on the machine.
+	def test_tcpdump_present(self):
+		try:
+			proc = subprocess.run("tcpdump --version", 
+									shell=True, check=True)
+			mes = 'Error was not detected, TCPDump must be present.'
+			self.print_message("Success: {0}".format(mes))
+			self.assertTrue(True)
+		except subprocess.CalledProcessError:
+			self.fail("Failure. Check that TCPDump is on the system")
 
 if __name__ == "__main__":
 	unittest.main()
