@@ -36,9 +36,8 @@ from socket import *
 #
 # TODO:
 #  1) Add error handling support.
-#  2) Add tests.
-#  3) Add enhanced filtering for the pcap from the keys
-#  4) Add formatting support.
+#  2  Add enhanced filtering for the pcap from the keys
+#  3) Add formatting support.
 #
 
 
@@ -169,6 +168,7 @@ class network_capture(object):
 			pass
 		else:
 			exit("The interface being used is not up.")
+
 
 	#
 	# Get a filename to set for both the pcap and txt filtered file
