@@ -25,10 +25,10 @@ import asyncio, pickle
 from socket import *
 
 # Host (199.99.99.99) capture for keys: error,host,ssl
-# $ python network_capture.py host 199.99.99.99 -keys error,host,ssl
+# $ python network_capture.py -host 199.99.99.99 -keys error,host,ssl
 
 # Port (80) capture  for keys: error,host,ssl
-# $ python network_capture.py port 80 -keys error,host,ssl
+# $ python network_capture.py -port 80 -keys error,host,ssl
 
 # Interface (en0) capture  for keys: error,host,ssl
 # $ python network_capture.py -i en0 ip6 -keys error,host,ssl
@@ -171,15 +171,12 @@ class network_capture(object):
 
 
 	#
-	# Get a filename to set for both the pcap and txt filtered file
+	# Get a filename to set for both the pcap and txt filtered file.
 	def get_filename(self):
 		return f"network_capture_{datetime.datetime.now():%Y-%m-%d-%m:%s}"
 
 	#
-	#
-	def capture_error(self):
-		print("capture_error")
-
+	# Async method to start the capture.
 	async def dispatch_capture(self):
 
 		print("Capturing command: {0}".format(self.capture_cmd))
@@ -193,7 +190,7 @@ class network_capture(object):
 		if len(self.keywords) > 0:
 			keyword_filtering = True
 
-		# Open a file and start the capture with the files context for read/write
+		# Open a file and start a read/write context
 		with open(self.txt_file, 'w') as txt_file_obj:
 
 			try:
@@ -224,32 +221,42 @@ class network_capture(object):
 
 			except OSError as err:
 				print("-- Exiting due to an operating system failure --")
-				print("-- {0} lines captured in your filter --".format(line_count))
+				print("-- {0} lines captured in your filter --"
+						.format(line_count))
 				print("Error: {0}".format(err))
 				sys.exit(0)
 			except AttributeError as err:
 				print("-- Exiting due to an AttributeError --")
-				print("-- {0} lines captured in your filter --".format(line_count))
+				print("-- {0} lines captured in your filter --"
+						.format(line_count))
 				print("Error: {0}".format(err))
 			except:
 				print("-- Unexpected excpetion received --")
-				print("-- {0} lines captured in your filter --".format(line_count))
+				print("-- {0} lines captured in your filter --"
+						.format(line_count))
 				print("Errors: {0}".format(sys.exc_info()[0]))
 				sys.exit(0)
 			finally:
 				txt_file_obj.close()
 				await self.kill_process(capture_pid)
 
-
+	#
+	# Async method to execute the tcpdump commands and pipe them back to
+	# the awaiting pid.
 	async def capture_process(self):
 		return await asyncio.create_subprocess_shell(self.capture_cmd, 
 												  stdout=asyncio.subprocess.PIPE,
 												  stderr=asyncio.subprocess.PIPE)
 
+	#
+	# Async method to read a line from stdout and return it to the awaiting
+	# caller.  The line is formatted, printed, and evaluated.
 	async def capture_read_bytes(self, capture_pid):
 		return await capture_pid.stdout.readline()
 
-
+	#
+	# Async method to take kill and wait for the process to be terminated
+	# once finally is executed from dispatch_capture.
 	async def kill_process(self, capture_pid):
 		capture_pid.kill()
 		await capture_pid.wait()
