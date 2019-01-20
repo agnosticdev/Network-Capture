@@ -10,10 +10,10 @@ For example, when filtering on either the port, ip, or the interface you can spe
 
 ```bash
 # Host (199.99.99.99) capture for keys: error,host,ssl
-$ python network_capture.py host 199.99.99.99 -keys error,host,ssl
+$ python network_capture.py -host 199.99.99.99 -keys error,host,ssl
 
 # Port (80) capture  for keys: error,host,ssl
-$ python network_capture.py port 80 -keys error,host,ssl
+$ python network_capture.py -port 80 -keys error,host,ssl
 
 # Port (80) capture  for keys: error,host,ssl
 $ python network_capture.py -i en0 -keys error,host,ssl
